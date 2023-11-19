@@ -1,0 +1,59 @@
+.response-col_links {
+    display: none
+}
+
+.swagger-ui .scheme-container {
+    padding: 5px 0 !important;
+    margin: 0 0 0 0 !important;
+}
+
+.swagger-ui .info {
+    margin: 5px 0 !important;
+}
+
+.swagger-ui .execute-wrapper {
+    padding: 0px !important;
+}
+
+.swagger-ui .btn-group {
+    padding: 0px !important;
+}
+
+.swagger-ui .table-container {
+    padding-top: 0px !important;
+    padding-bottom: 0px !important;
+}
+
+.swagger-ui .responses-inner {
+    padding-top: 0px !important;
+    padding-bottom: 0px !important;
+}
+
+.swagger-ui .opblock {
+    margin: 0px !important;
+}
+
+.swagger-ui .opblock .opblock-section-header {
+    padding-top: 0px !important;
+    padding-bottom: 0px !important;
+    min-height: 30px !important;
+}
+
+.swagger-ui .opblock.opblock-post .tab-header .tab-item.active h4 span:after {
+    display: none;
+}
+
+.swagger-ui table tbody tr td:first-of-type {
+    padding-top: 0px !important;
+    padding-bottom: 0px !important;
+}
+
+.swagger-ui table tbody tr td {
+    padding-top: 0px !important;
+    padding-bottom: 0px !important;
+}
+
+.renderedMarkdown p {
+    margin-block-start: 0px !important;
+    margin-block-end: 2px !important;
+}
