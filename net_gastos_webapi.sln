@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "tests", "tests\tests.csproj
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "README", "README", "{EAB9DA70-EFB3-4A17-9E18-ACBF1BCF5865}"
 	ProjectSection(SolutionItems) = preProject
+		README-ca.md = README-ca.md
+		README-es.md = README-es.md
 		README.md = README.md
 	EndProjectSection
 EndProject

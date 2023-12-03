@@ -1,151 +1,149 @@
 # Gastos_webapi
-## Motivación
+## Motivation
 
-Este proyecto surge con el objectivo de que la aplicación para móvil que he desarrollado, [Dot Parpel Gastos](https://play.google.com/store/apps/details?id=cat.dotparpel.gastos), que hasta el momento guarda toda la información en local en una BD *SQLite*, pueda trabajar con datos en servidor a través de un WebApi. En el momento de escribir este documento la aplicación aún no está preparada para usar la WebApi.
+A time ago, I developed a mobile application, [Dot Parpel Gastos](https://play.google.com/store/apps/details?id=cat.dotparpel.gastos), that saves all the information locally in an *SQLite* DB. This project starts with the objective of allow the application to save the data on a server through a WebApi. At the time of writing this document the application is not yet ready to use the WebApi.
 
-## Tecnologías usadas
+## Technologies used
 
-Esta WebApi usa las siguientes tecnologías:
+This WebApi uses the following technologies:
 
 | <!-- --> | Tecnología | 
 |-|-|
-| Lenguage | C# (Net Core 7) |
-| Bases de datos | PostgreSQL o SQL-Server<br> InMemory (pruebas)<br> SQLite (sólo para importación / exportación de datos) |
-| Descripción de la WebApi | Swagger / OpenApi |
-| Acceso a datos | OData |
-| Autenticación | JwtBearer (opcional) |
-| *Framework* de pruebas | xUnit |
+| Language | C# (Net Core 7) |
+| Databases | PostgreSQL or SQL-Server<br> InMemory (tests)<br> SQLite (only for data import/export) |
+| WebApi description | Swagger / OpenApi |
+| Data access | OData |
+| Authentication | JwtBearer (optional) |
+| Test *Framework* | xUnit |
 
-## Entorno de desarrollo
+## Development environment
 
-Para el desarrollo de la aplicación se ha usado:
+For the development of the application I have used:
 | <!-- --> | Tecnología | 
 |-|-|
-| Sistemas operativos | Windows 10, Windows 11, Linux Mint 21 |
-| Contenedor | Docker (base de datos de prueba PosgreSQL / SQL-Server) |
-| Entorno de desarrollo | Visual Studio Code, con las siguientes extensiones:<br>- [C#](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.csharp) <br>- [.NET Core Test Explorer](https://marketplace.visualstudio.com/items?itemName=formulahendry.dotnet-test-explorer)<br>- [Coverage Gutters](https://marketplace.visualstudio.com/items?itemName=ryanluker.vscode-coverage-gutters)<br> - [vscode-solution-explorer](https://marketplace.visualstudio.com/items?itemName=fernandoescolar.vscode-solution-explorer) |
+| Operating systems | Windows 10, Windows 11, Linux Mint 21 |
+| Container | Docker (development databases PosgreSQL / SQL-Server) |
+| Development environment | Visual Studio Code, with the following extensions:<br>- [C#](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.csharp) <br>- [.NET Core Test Explorer](https://marketplace.visualstudio.com/items?itemName=formulahendry.dotnet-test-explorer)<br>- [Coverage Gutters](https://marketplace.visualstudio.com/items?itemName=ryanluker.vscode-coverage-gutters)<br> - [vscode-solution-explorer](https://marketplace.visualstudio.com/items?itemName=fernandoescolar.vscode-solution-explorer) |
 
-Para la selección de estas herramientas las motivaciones han sido:
-- Uso de estándares consolidados y multiplataforma siempre que sea posible
-- Disponibilidad de las herramientas de desarrollo sin coste
-- Uso bajo de recursos en la plataforma de despliegue destino
-    - En particular, la aplicación destino deberá poder desplegarse y ejecutarse en una *Raspberry 4*
+The motivations for the selection of these tools have been:
+- Use of consolidated and cross-platform standards whenever possible
+- Availability of development tools at no cost
+- Low resource usage on the target deployment platform
+     - In particular, the target application must be able to be deployed and run on a *Raspberry 4*
 
-## Objetivos
-El objetivo inicial ha sido, tal como se explica en el apartado motivación, dar soporte a la aplicación [Dot Parpel Gastos](https://play.google.com/store/apps/details?id=cat.dotparpel.gastos) para que pueda trabajar con datos en servidor.
+## Goals
+The initial objective has been to allow the application [Dot Parpel Gastos](https://play.google.com/store/apps/details?id=cat.dotparpel.gastos) leave the data on the server.
 
-Como objetivos secundarios pero no por ello menos relevantes:
-- Facilidad de uso de la WebApi
-- En la medida de lo posible, que la WebApi se autoexplique y permita pruebas (mediante *Swagger*)
-- Proporcionar ejemplos de uso de la WebApi en la propia página *Swagger*
-- Adición de nuevas entidades con (relativa) facilidad
+Secondary objectives, but no less relevant:
+- Ease of use of the WebApi
+- As far as possible, let the WebApi explain itself and allow testing (using *Swagger*)
+- Provide examples of use of the WebApi on the *Swagger* page itself
+- Adding new entities with (relative) ease
 
-Con estos objetivos en mente, la aplicación resultante presenta el siguiente aspecto:
+With these goals in mind, the resulting application looks like this:
 
-<img src="READMEImages/Image01.png" alt="Aspecto de la WebApi" height="700"/>
+<img src="READMEImages/Image01.png" alt="WebApi apperance" height="700"/>
 
-## Descripción
-La WebApi proporciona las siguientes funcionalidades:
-* CRUD para entidades, en el proyecto `Category` y `Expense`, aceptando consultas OData en el método de lectura de listas (GET)
-* Entidades únicamente de lectura de listas (`ExpenseExpanded` y `ExpenseReport`), usadas usualmente para la presentacion de información en desplegables, listas o informes
-* Controlador `App` con métodos propios de gestión de la aplicación. En concreto, los métodos permitidos son:
-  - `login`: únicamente visible con la seguridad activada (ver el apartado Configuración más adelante), permite la introducción de credenciales y obtener, en caso de que sean válidas, un *token* de acceso y un *token* de refresco
-  - `refreshToken`: únicamente visible con la seguridad activada, permite renovar un *token* de acceso caducado proporcionando un *token* de refresco. Típicamente se usa para evitar enviar las credenciales de usuario una vez caduque el *token* de acceso
-  - `logout`: únicamente visible con la seguridad activada, indica a la WebApi que el usuario termina la sesión
-  - `import`: importación de datos a tablas proporcionando una base de datos SQLite. Para que la importación se produzca correctamente, el nombre y la estructura de la tabla a importar debe tener el mismo nombre y estructura en la base de datos destino, además de constar en parámetro `ExportEntities`. Destacar que **los datos de la tabla destino serán <ins>substituidos</ins> por los proporcionados en la base de datos SQLite**
-  - `export`: exportación del contenido de la base de datos de la WebApi a una base de datos SQLite. Sólo se exportan las tablas indicadas en el parámetro `ExportEntities` del apartado `App` del fichero `appsettings.json`
-  - `version`: devuelve el número de versión de la WebApi. Hay que tener presente que el número de versión del programa no tiene por qué coincidir con la versión de la interfície. Usado en determinados entornos para comprobar si la WebApi está disponible (por ejemplo, prueba de servicio alzado con Nagios)
-* Controlador `User`: permite la gestión de usuarios (credenciales). Por defecto se excluye su uso, todo y que se puede activar explícitamente a través de la configuración del `appsettings.json`
+## Description
+The WebApi provides the following functionalities:
+* CRUD for entities, in the project `Category` and `Expense`, accepting OData queries in the list reading (GET) method
+* Read-only entities (`ExpenseExpanded` and `ExpenseReport`), usually used for the presentation of information in dropdowns, lists or reports
+* `App` controller with funcionality used in security and data management. Provides the following methods:
+  - `login`: only visible with security activated (see the [Configuration](#ConfigurationId) section below), allows the introduction of credentials and obtain an access *token* and a refresh *token* necessary to use the WebApi
+  - `refreshToken`: only visible with security activated, allows to renew an expired access *token* by providing a refresh *token*. Typically used to avoid sending user credentials once the access *token* expires
+  - `logout`: only visible with security activated, indicates to the WebApi that the user ends the session
+  - `import`: import data tables providing an *SQLite* database. The name and structure of the table to be imported must have the same name and structure in the WebApi database, in addition to being included in the `ExportEntities` parameter. Note that **the data in the destination table will be <ins>replaced</ins> by those provided in the *SQLite database***
+  - `export`: export the contents of the WebApi database to an *SQLite* database. Only the tables indicated in the `ExportEntities` parameter of the `App` section of the `appsettings.json` file are exported.
+  - `version`: returns the version number of the WebApi. Keep in mind that the version number of the program does not have to coincide with the version of the interface. Used in certain environments to check if the WebApi is available (e.g. monitoring with *Nagios*)
+* `User` controller: allows the management of users authorized to use the WebApi. By default its not accessible, but can be activated explicitly through the `appsettings.json` configuration
 
-Inicialmente, el entorno de desarrollo (configurado en `appsettings.Development.json`) se proporciona con la **seguridad desactivada**, de forma que se permite la ejecución de los métodos de la WebApi sin tener que introducir credenciales. 
+Initially, the development environment (configured in `appsettings.Development.json`) is provided with **security disabled**, allowing WebApi methods to run without having to enter credentials.
 <br/><br/>
-Así mismo, para poder realizar pruebas immediatamente, se proporciona un fichero de datos 'Gastos_Example.db' situado en el directorio '\webapi\Repository\App\DB' con información sintética de pruebas. El mencionado fichero es una base de datos *SQLite* que se puede abrir con cualquier lector apto para ello (se puede descargar el gestor oficial en https://www.sqlite.org/download.html).
+In order to be able to perform tests immediately, a data file 'Gastos_Example.db' located in the directory '\webapi\Repository\App\DB' is provided with synthetic test information. The aforementioned file is a *SQLite* database that can be opened with any reader suitable for it (the official manager can be downloaded at https://www.sqlite.org/download.html).
 
-## Prueba del programa
-La aplicación está configurada en el repositorio para que se pueda ejecutar una vez bajada en el entorno de desarrollo sin acciones prévias.
+## Program test
+The application can be run once downloaded into the development environment without prior actions.
 
-En la configuración del entorno de desarrollo por defecto (`appsettings.Development.json`) se parametriza que:
-- La base de datos usada es *InMemory*, lo que implica que inicialmente está vacía y no serán persistidos los cambios que se hagan
-- No hay seguridad asignada y se puede ejecutar sin proporcionar credenciales
-- La aplicación se inicia en http://localhost:5000/ y presenta una interfície *Swagger* que permite realizar pruebas fácilmente
+The default development environment configuration (`appsettings.Development.json`) is parameterized as follows:
+- The database used is *InMemory*, which means that it is initially empty and any changes made will not be persisted
+- Security is disabled and can be run without providing credentials
+- The application starts at http://localhost:5000/ and presents a *Swagger* interface that allows easy testing
 
-En la configuración del entorno de producción (`appsettings.json`), el programa se configura de la siguiente forma:
-- La base de datos usada es una instancia de *PostgreSQL* localizada en 192.168.1.2 (se debe modificar por la dirección donde se halle el servidor *PostgreSQL*), y se puede crear a través del *script* `0001.sql` localizado en la carpeta `Repository/App/DB/postgres` del proyecto WebApi
-- Opcionalmente, se puede indicar que se usa una base de datos SQL-Server assignado en el apartado "ConnectionStrings" el campo "Active" al valor "MsSql" y introduciendo una cadena de conexión válida en el campo del mismo nombre. Para crear la base de datos SQL-Server se puede usar el *script* localizado en `Repository/App/DB/mssql`
-- Para ejecutar los métodos de la WebApi es necesario proporcionar credenciales a través del método *login* del controlador *App*. En el *script* anterior, se configura un usuario *admin* con la contraseña *pwd*
-- La aplicación se inicia en https://localhost:5001/ y no presenta la interfície *Swagger*, aunque se identifica a sí misma y indica su versión
+The production environment settings (`appsettings.json`) are mapped as follows:
+- The database used is an instance of *PostgreSQL* located at 192.168.1.2 (you have to set your own server address). The *script* `0001.sql` is provided in the `Repository/App/DB/postgres` folder of the WebApi project, and can be used to create an empty database
+- Optionally, you can indicate that a SQL-Server database is used by assigning the "Active" field to the value "MsSql" in the "ConnectionStrings" section and setting a valid connection string in the field of the same name. To create the SQL-Server database you can use the *script* located in `Repository/App/DB/mssql`
+- To execute the WebApi methods it is necessary to provide credentials through the *login* method of the *App* controller. In the *scripts* above, a user *admin* is configured with the password *pwd*
+- The application starts at https://localhost:5001/ and does not present the *Swagger* interface, although it identifies itself and indicates its version
 
-<img src="READMEImages/Image02.png" alt="Identificación de la WebApi" width="400"/>
+<img src="READMEImages/Image02.png" alt="WebApi greeting" width="400"/>
 <br><br>
 
-En el apartado [Configuración](#ConfiguracionId) de esta pàgina se muestra como conseguir configuraciones intermedias para ejecutarse por ejemplo en un entorno de pruebas.
+The [Configuration](#ConfigurationId) section of this page shows how to obtain intermediate configurations to run, for example, in a test environment.
 
-En cualquiera de los dos casos, se puede importar el pequeño fichero de pruebas *SQLite* `Gastos_Example.db` situado en la carpeta `Repository/App/DB` mediante el uso del método `import` del controlador `App`, tal como se muestra en la siguiente imagen:
+Anyway, you can import the small *SQLite* test file `Gastos_Example.db` located in the `Repository/App/DB` folder by using the `import` method of the `App` driver, as shown in the following image:
 
-<img src="READMEImages/Image03.png" alt="Importación de datos SQLite" width="600"/>
+<img src="READMEImages/Image03.png" alt="SQLite data import" width="600"/>
 <br><br>
 
-Los pasos para realizar la importación son los siguientes:
-1) En el apartado "App", pulsar con el ratón en la opción `POST /import`
-2) Con la acción anterior, se despliega el contenido de la opción. Pulsar el botón "Try it out"
+The steps to do the import are:
+1) In the "App" section, click with the mouse on the `POST /import` button
+2) With the previous action, the content of the option is displayed. Press the "Try it out" button
 
-<img src="READMEImages/Image04.png" alt="Importación de datos SQLite (paso 2)" width="600"/>
+<img src="READMEImages/Image04.png" alt="SQLite data import (step 2)" width="600"/>
 
-3) Al hacerlo, se muestra un botón "Browse" que permite seleccionar, en nuestro caso, la base de datos SQLite a importar
+3) A "Browse" button is displayed that allows you to select, in our case, the *SQLite* database to import
 
-<img src="READMEImages/Image05.png" alt="Importación de datos SQLite (paso 3)" width="600"/>
+<img src="READMEImages/Image05.png" alt="SQLite data import (step 3)" width="600"/>
 
-4) Una vez pulsado, se abre un formulario de diálogo que permite seleccionar el archivo a importar. Pulsamos el botón "Open"
-5) Finalmente, se muestra el botón "Execute", que se muestra en la parte inferior de la imagen anterior con fondo azul. Lo pulsamos y con ello finalizamos la importación de datos
+4) Once clicked, a dialog form opens that allows you to choose the file to import. Press the "Open" button
+5) Finally, the "Execute" button is displayed, shown at the bottom of the image above with a blue background. Press it to finish the data import
 
-En los métodos *GET* de los controladores de datos (en el proyecto, los correspondientes a los apartados *Category* y *Expense*), además de los parámetros para construir la consulta añadidos por *Swagger*, se proporcionan enlaces rápidos de prueba que muestran algunas de las posibilidades de consulta proporcionadas por *OData*. 
+In the *GET* methods of the data controllers (in the project, those corresponding to the *Category* and *Expense* sections), in addition to the parameters to build the query added by *Swagger*, quick test links are provided which show some of the query possibilities provided by *OData*.
 
-Pulsando el enlace, se ejecuta la consulta correspondiente y se muestra el resultado en una nueva pestaña.
+By clicking the link, the corresponding query is executed and the result is displayed in a new tab.
 
-<img src="READMEImages/Image06.png" alt="Enlaces en los métodos GET" width="600"/>
+<img src="READMEImages/Image06.png" alt="Links in GET methods" width="600"/>
 
-Finalmente, para probar mediante *Swagger* la seguridad en el entorno de desarrollo, es necesario proporcionar una configuración del *token* JWT en el subapartado "App" -> "JWT". Como ya se proporciona una el en fichero de `appsettings.json`, lo más sencillo es eliminar el mencionado subapartado en `appsettings.Development.json`, que está destacada en la siguiente imágen:
+Finally, if you want to enable security in the development environment, you have to provide a JWT *token* configuration in the "App" -> "JWT" subsection. Since one is already provided in the `appsettings.json` file, you can eliminate the aforementioned subsection in `appsettings.Development.json`, which is highlighted in the following image:
 
-<img src="READMEImages/Image07.png" alt="Configuración seguridad" width="600"/>
+<img src="READMEImages/Image07.png" alt="Security settings" width="600"/>
 
-Al ejecutar la WebApi en el entorno de desarrollo, si no se ha modificado el fichero de configuracion `appsettings.json` se mostrarán los métodos `login`, `refreshToken` y `logout` en el apartado `App`.
+When running the WebApi in the development environment, if the configuration file `appsettings.json` has not been modified (security is disabled), the `login`, `refreshToken` and `logout` methods will **not** be displayed in the `App` section.
 
-Con la seguridad activada, al intentar ejecutar cualquier método no público, el programa mostrará un error `401 - Unauthorized`.
-
-Para introducir las credenciales, hemos de seguir los siguientes pasos:
-1) Pulsar sobre el método `POST - /login` del apartado `App`
-2) Una vez *Swagger* despliega la información y opciones del método, pulsar sobre el botón "Try it out"
+With security enabled, when attempting to execute any non-public method, the program will display a `401 - Unauthorized` error. To use the program you need provide credentials, following the following steps:
+1) Click on the `POST - /login` method of the `App` section
+2) Once *Swagger* displays the information and options of the method, click on the "Try it out" button
 
 <img src="READMEImages/Image08.png" alt="Login (1)" width="600"/>
 
-3) Tal como se puede ver en la imagen anterior, se muestra en el apartado "Request body" un JSON con los campos "user" i "pwd". Introducimos como usuario "admin" y como contraseña "pwd", pulsando después el botón "Execute".
-4) Si los datos son correctos y ejecutando la WebApi con la configuración por defecto, el programa debería responder mostrandoun apartado "Responses" con un código de respuesta 200 y con un JSON con dos campos, "token_access" y "token_refresh"
+3) As you can see in the previous image, a JSON with the fields "user" and "pwd" is displayed in the "Request body" section. Enter "admin" as the user and "pwd" as the password, then press the "Execute" button.
+4) If the data is correct, the program should respond by showing a "Responses" section with a response code 200 and a JSON with two fields, "token_access" and "token_refresh"
 
 <img src="READMEImages/Image09.png" alt="Login (2)" width="600"/>
 
-5) Copiamos el contenido del campo "token_access" (sin las comillas que lo envuelven) y pulsamos el icono del candado abierto que se muestra en la parte derecha del método
-6) *Swagger* abre una ventana con el título "Available autorizations", y explica como informar un *token* de tipo *Bearer*. Seguimos las instrucciones y escribimos en el campo "Value" de la ventana el texto "Bearer " (observar el espacio al final del texto) y pegamos el contenido del campo "token_access" que hemos copiado anteriormente. Seguidamente, pulsamos el botón "Authorize" y después "Close"
+5) Copy the content of the "token_access" field (without the quotes surrounding it) and click on the open padlock icon shown on the right side of the method
+6) *Swagger* opens a window with the title "Available authorizations", and explains how to set a *token* of type *Bearer*. Follow the instructions and write the text "Bearer " in the "Value" field of the window (note the space at the end of the text) and paste the content of the "token_access" field that you copied previously. Next, press the "Authorize" button and then "Close"
 
 <img src="READMEImages/Image10.png" alt="Login (3)" width="600"/>
 
-7) Ahora todos los candados abiertos de la página deberían haber cambiado por candados cerrados. Si ejecutamos cualquier método sobre las entidades de datos, deberían mostrar la información disponible. Atención, que por defecto el *token* tiene una caducidad por defecto de 30 min.
+7) Now all open locks on the page should have changed to closed locks. If you run any method on the data entities, they should display the available information. Beware, the *token* has a default expiration of 30 min. by default
 
 <div id="ConfiguracionId"></div>
 
-## Configuración
+## Setting
 
-En este apartado se procede a explicar las opciones de configuración de la WebApi a partir del fichero de configuración `appsettings.json`.
+This section explains the WebApi configuration options available modifying the `appsettings.json` file.
 
-Los apartados de configuración propios de la aplicación son los siguientes:
+The configuration sections of the application are below:
 * `ConnectionStrings`
 * `App`
 * `Swagger`
 
-El resto de apartados es común a todos los proyectos *.NET*, así que no se explican en este documento.
+The rest of the sections are common to all *.NET* projects, so they are not explained in this document.
 
 ### ConnectionStrings
 
-Se definen las cadenas de conexión con las que se puede configurar el programa y determinar la que está activa. Tiene el siguiente aspecto:
+Connection strings are defined with which you can configure the program and specify which one is active. The section looks like this:
 
 ```
 "ConnectionStrings": {
@@ -155,15 +153,15 @@ Se definen las cadenas de conexión con las que se puede configurar el programa 
   }
 ```
 
-Donde el campo `Active` indica la cadena de conexión que usará el programa cuando se ejecute, especificandose a continuación del mismo una lista de propiedades que indican:
-  * Una identificador de la cadena  
-  * La cadena de conexión a usar por el programa
+Where the `Active` field indicates the connection string that the program will use when it is executed, specifying after it a list of properties that indicate:
+   * A string identifier
+   * The connection string to use by the program
 
-En la cadena correspondiente a "InMemory" sólo se especifican credenciales a usar en caso de ejecutar la WebApi con la seguridad activada (la configuracion de seguridad se explica en en siguiente apartado).
+In the string corresponding to "InMemory" only credentials are specified to be used in case of executing the WebApi with security activated (the security configuration is explained in the next section).
 
 ### App
 
-Aquí se definen los parámetros de la aplicación. En el momento de escribir este documento, está configurada de la siguiente forma:
+Here the parameters of the application are defined. At the time of writing this document, it is configured as follows:
 
 ```
   , "App" : {
@@ -186,18 +184,18 @@ Aquí se definen los parámetros de la aplicación. En el momento de escribir es
   }
 ```
 
-Cada uno de los parámetros tiene el siguiente uso:
-* `Title`: título de la aplicación. Se muestra tanto en la página *Swagger* como en la autoidentificación del servicio cuando no se usa la página *Swagger*
-* `DbEncriptionKey`: texto usado como clave para encriptación de campos en la base de datos. Actualmente sólo se usa en el campo de contraseña del usuario
-* `ApiVersion`: versión de la interfície de la Api, que no tiene que coincidir con la versión del própio proyecto. Se usa como información, ya que el proyecto aún no da soporte a múltiples interfícies del servicio
-* `Jwt`: parámetors relacionados con la gestión del *JSON Web Token*. Si se define una clave, el servicio provee de los métodos `login` y `token` para obtener y gestionar un *token*, y exige proporcionar el mismo en las llamadas a la WebApi. Caso contrario, se permite la ejecución de métodos sin autenticación y por defecto no se publican los métodos anteriores. De esta forma, es posible configurar el entorno de desarrollo sin seguridad y el entorno de producción con ella
-* `UseSwaggerUI`: determina si se mostrará una página *Swagger*. Así, es posible que los entornos de desarrollo y pruebas / integración presenten la página *Swagger*, mientras que el entorno de producción no lo haga 
-* `ExcludeControllerMethods`: lista de métodos / controladores que se excluyen de la API para que sean inaccesibles. En el fichero de configuración de la parte superior se excluye el método `import` del controlador `App` y tambien el controlador `User` en su totalidad. Con ello se consigue que en el entorno de producción no sea posible ni importar datos (destruyendo los existentes) ni realizar mantenimiento de usuarios
-* `ExportEntities`: lista de entidades que serán importadas / exportadas por los métodos `import` y `export`
+Each of the parameters has the following use:
+* `Title`: title of the application. Displayed on both the *Swagger* page and the service greeting when the *Swagger* page is not used
+* `DbEncriptionKey`: text used as a key for encryption of fields in the database. Currently only used in the user password field
+* `ApiVersion`: version of the API interface, which does not have to match the version of the project itself. It is used as information, since the project does not yet support multiple service interfaces
+* `Jwt`: parameters related to the management of the *JSON Web Token*. If a key is defined, the service provides the `login` and `token` methods to obtain and manage a *token*, and requires providing it in calls to the WebApi. Otherwise, the execution of methods without authentication is allowed and the previous methods are not published. So it is possible to configure the development environment without security and the production environment with it
+* `UseSwaggerUI`: determines whether a *Swagger* page will be displayed. Thus, it is possible that the development and test/integration environments present the *Swagger* page, while the production environment does not
+* `ExcludeControllerMethods`: list of methods/controllers that are excluded from the API to make them inaccessible. In the configuration file at the top, the `import` method of the `App` controller is excluded, as well as the `User` controller entirety. This means that in the production environment it is not possible to import data (destroying existing data) or perform user maintenance.
+* `ExportEntities`: list of entities that will be imported/exported by the `import` and `export` methods
 
 ### Swagger
 
-Finalmente, en este apartado se define parte del comportamiento, aspecto y contenido de la página *Swagger*, presentado el siguiente aspecto:
+Finally, this section defines part of the behavior, appearance and content of the *Swagger* page, presenting the following appearance:
 
 ```
   , "Swagger" : {
@@ -290,32 +288,32 @@ Finalmente, en este apartado se define parte del comportamiento, aspecto y conte
   }
 ```
 
-Cada uno de los campos del *JSON* tiene el siguiente significado:
-- `UrlSampleRequest`: valor de la URL que será substituido en lugar del parámetro `[doclink]` en la descripción de los métodos. Tiene la utilidad de permitir que cuando se pulse un enlace de la descripción se ejecute el método del servicio
-- `PersistAuthorization`: permite que se deba introducir una única vez las credenciales a lo largo de diferentes ejecuciones de la aplicación. Tiene sentido únicamente cuando se encuentre activada la seguridad mientras se está desarrollando
-- `DefaultHttpMethodOrder`: orden por defecto en que se mostrarán los métodos HTTP de un controlador en la página *Swagger*
-- `MethodOrder`: orden en que se muestran los métodos de un controlador
-- `Definitions`: definición de *Jsons* de ejemplo comunes a diferentes métodos
-- `SchemasToRedefine`: redefinición de esquemas mostrados por *Swagger*. Su existencia se debe a que en el momento de desarrollar el servicio, el método `patch` de los controladores mostraba un esquema poco intuitivo, tal como se muestra a continuación:
+Each of the *JSON* fields has the following meaning:
+- `UrlSampleRequest`: URL value that will be substituted instead of the `[doclink]` parameter in the methods description. It allows the service method to be executed when a link in the description is clicked
+- `PersistAuthorization`: allows credentials to be entered only once across different executions of the application. It only makes sense when security is enabled while developing
+- `DefaultHttpMethodOrder`: order in which a controller's HTTP methods will be displayed on the *Swagger* page
+- `MethodOrder`: order in which the methods of a controller are displayed
+- `Definitions`: definition of example *Jsons* common to different methods
+- `SchemasToRedefine`: redefinition of schemas displayed by *Swagger*. Its existence is due to the fact that at the time of developing the service, the `patch` method of the controllers showed an unintuitive scheme, as shown below:
 <br/>
-<img src="READMEImages/Image11.png" alt="Esquema del método PATCH del controlador 'Category'" width="400"/>
+<img src="READMEImages/Image11.png" alt="PATCH method of the 'Category' controller" width="400"/>
 
-- `Paths`: en este apartado se pueden configurar diferentes aspectos sobre como se muestra cada uno de los métodos en la pàgina *Swagger*
-    - `Path`: ruta del servicio sobre la que se definen las propiedades
-    - `Hide`: no mostrar el método
-    - `Operation`: corresponde al método HTTP, ya que un *path* puede ser comun a dos operaciones diferentes. Por ejemplo, el *path* */Category* tiene dos operaciones asociadas, una para GET y otra para POST
-    - `SchemaResponse`: esquema esperado de la respuesta
-    - `Examples`: ejemplos que queremos proporcionar para un método del servicio. Para cada ejemplo podemos especificar:
-      - `Content`: tipos HTTP de la respuesta
-      - `Example`: descripción del ejemplo
-      - `DefinitionId`: descripción del ejemplo definida en el apartado `Definitions` dentro del apartado `Swagger`
-    - `Description`: descripción en formato HTML del ejemplo. Dentro de la descripción, el texto `[doclink]` se substituye por el texto especificado en `UrlSampleRequest`
-    - `MessageType`: descripcion del contenido a pasar al método al llamarlo
-    - `Summary`: texto de descripción del método
+- `Paths`: in this section you can configure different aspects of how each of the methods is displayed on the *Swagger* page
+    - `Path`: service path on which properties are defined
+    - `Hide`: do not show the method
+    - `Operation`: corresponds to the HTTP method, since a *path* can be common to two different operations. For example, the *path* */Category* has two operations associated with it, one for GET and one for POST
+    - `SchemaResponse`: expected schema of the response
+    - `Examples`: examples that you want to provide for a method of the service. For each example you can specify:
+      - `Content`: HTTP response types
+      - `Example`: description of the example
+      - `DefinitionId`: description of the example defined in the `Definitions` section within the `Swagger` section
+    - `Description`: description in HTML format of the example. Within the description, the text `[doclink]` is replaced by the text specified in `UrlSampleRequest`
+    - `MessageType`: description of the content to be passed to the method when calling it
+    - `Summary`: method description text
 
-## Despliegue
+## Deployment
 
-Para la realización de pruebas, la aplicación se ha desplegado en un contenedor *Docker* emplazado en una *Raspberry 4*. El fichero de configuración usado és el siguiente:
+For testing, the application has been deployed in a *Docker* container located on a *Raspberry 4*. The configuration file used is the following:
 
 ```
 # Download the Dot Net runtime.
@@ -349,54 +347,54 @@ COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "webapi.dll"]
 ```
 
-Como se puede observar, la aplicación se descarga directamente del servidor *git* situado en la dirección https://192.168.1.2:8081/net_gastos_webapi.git. Si se desea adaptar esta configuración, se debe substituir esta dirección local por la que corresponda.
+As you can see, the application is downloaded directly from the *git* server located at the address https://192.168.1.2:8081/net_gastos_webapi.git. If you wish to adapt this configuration, you have to replace the local address with your own.
 
-## Aspectos técnicos
-La aplicación consta una solución .NET con dos proyectos:
-- La propia WebApi situada en el directorio `webapi`
-- Un proyecto de pruebas situado en el directorio `tests`
+## Technical aspects
+The application consists of a .NET solution with two projects:
+- The WebApi itself located in the `webapi` directory
+- A test project located in the `tests` directory
 
-Se explican ambos a continuación:
+Both are explained below:
 
-### WebApi (directorio `webapi`)
-El proyecto se basa fuertemente en tres controladores:
-- `AppController` que proporciona los métodos de identificación, autenticación e importación / exportación de datos
-- `GenericCRUDController` que permite el mantenimiento (alta / baja / modificación) de entidades
-- `GenericSearchController` que permite la búsqueda de entidades
+### WebApi (`webapi` directory)
+The project relies heavily on three controllers:
+- `AppController` which provides identification, authentication and data import/export methods
+- `GenericCRUDController` that allows maintenance (CRUD) of entities
+- `GenericSearchController` which allows entity search
 
-El resto de controladores de la WebApi se derivan de los dos últimos.
+The rest of the WebApi controllers are derived from the last two.
 
-A su vez, los dos controladores genéricos usan las clases genéricas de acceso a datos:
-- `GenericRepository`: dado un contexto, proporciona los métodos genéricos para realizar altas / bajas / modificaciones
-- `GenericSearch`: búsqueda de datos
+The two generic drivers use the generic data access classes:
+- `GenericRepository`: given a context, provides the generic methods to perform CRUD
+- `GenericSearch`: data search
 
-### Proyecto de pruebas (directorio `tests`)
-En el projecto cabe destacar tres carpetas:
-- `Client`: contiene código que puede usarse desde un cliente para autenticarse y ejecutar métodos de la WebApi
-- `Tests`: código que ejecuta las pruebas
-- `TestResults`: resultado de las pruebas, que una vez ejecutadas incluye un fichero `lcov.info` junto con un directorio `coveragereport` en donde reside el informe HTML generado por la utilidad [ReportGenerator](https://github.com/danielpalme/ReportGenerator)
+### Tests project (`tests` directory)
+You can see three folders in the project:
+- `Client`: contains code that can be used from a client to authenticate and execute WebApi methods
+- `Tests`: code that executes the tests
+- `TestResults`: results of the tests, which once executed include a file `lcov.info` along with a directory `coveragereport` where the HTML report generated by the utility [ReportGenerator](https://github.com/danielpalme/ReportGenerator) resides
 
-## Ejecución de pruebas
-* Para crear el fichero con los resultados de las pruebas, nos aseguramos que nos encontramos en el directorio `tests` y ejecutamos en la ventana de terminal el siguiente comando:
+## Testing execution
+* To create the file with the test results, you have to assure that you are in the `tests` directory and execute the following command in the terminal window:
 
   `dotnet test -p:CollectCoverage=true -e:CoverletOutputFormat='lcov' -e:CoverletOutput='./TestResults/lcov.info'`
 
-  Este comando crea un fichero lcov.info en el directorio *TestResults* del proyecto de pruebas *Tests*
+  This command creates a lcov.info file in the *TestResults* directory of the *Tests* test project.
 
-  En Visual Studio Code, con la extensión [Coverage Gutters](https://marketplace.visualstudio.com/items?itemName=ryanluker.vscode-coverage-gutters) podemos ver en cada uno de los ficheros del proyecto las partes que han sido probadas, destacandolas en verde en la parte izquierda del editor de código y mostrando el porcentaje de código probado en la parte inferior izquierda de la barra de estado del entorno.
+  In *Visual Studio Code*, with the extension [Coverage Gutters](https://marketplace.visualstudio.com/items?itemName=ryanluker.vscode-coverage-gutters) you can see in each of the project files the parts that have been tested, highlighting them in green on the left side of the code editor and displaying the percentage of code tested at the bottom left of the environment status bar.
 
-  Si queremos obtener un informe de la cobertura de nuestras pruebas, podemos usar el [ReportGenerator](https://github.com/danielpalme/ReportGenerator) con el siguiente comando:
+  If you want to obtain a report of the coverage of our tests, you can use the [ReportGenerator](https://github.com/danielpalme/ReportGenerator) with the following command:
   
   `reportgenerator -reports:./TestResults/lcov.info -targetdir:./TestResults/coveragereport`
 
-  Una vez ejecutado este comando desde el proyecto de prueba *Tests*, podemos abrir el informe desde el propio Visual Studio Code accediendo al fichero *index.htm* desde la carpeta *TestResults/coveragereport* con la opción *Show preview* que proporciona el propio entorno.
+  Once this command has been executed from the *Tests* project, you can open the report from *Visual Studio Code* by accessing the *index.htm* file from the *TestResults/coveragereport* folder with the *Show preview* option that provides the environment itself.
 
-  Tal como se indica en la pàgina web de la herramienta, para instalar el [ReportGenerator](https://github.com/danielpalme/ReportGenerator) a nivel global y que esté disponible desde cualquier proyecto, podemos ejecutar en el terminal:
+  As indicated on the tool's website, to install [ReportGenerator](https://github.com/danielpalme/ReportGenerator) globally and make it available from any project, you can execute in the terminal:
 
   `dotnet tool install -g dotnet-reportgenerator-globaltool`
 
-## Mejoras pendientes
-- Inclusión de un *logger*
-- Añadir métodos de sincronización de datos entre una BD local y la BD de la WebApi
-- Gestión de diferentes versiones de la misma WebApi
-- Posibilidad de importar / exportar datos comprimidos (ZIP)
+## Pending improvements
+- Inclusion of a *logger*
+- Add data synchronization methods between a local database and the WebApi database
+- Management of different versions of the same WebApi
+- Ability to import/export compressed data (ZIP)
