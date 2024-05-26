@@ -88,7 +88,7 @@ public class UserTest : GenericCRUDTest<ApiFactory02<Program>, User, int?>
 
     [Theory]
     [MemberData(nameof(UserKO))]
-    public async void Test200_CantCreateUserWithoutLoginAndPassword(User ent) {
+    public async Task Test301_CantCreateUserWithoutLoginAndPassword(User ent) {
         AccessAndRefreshToken? tokens = await EnsureLogged();
         Assert.NotNull(tokens);
 
@@ -110,7 +110,7 @@ public class UserTest : GenericCRUDTest<ApiFactory02<Program>, User, int?>
         };
 
     [Fact]
-    public async Task Test201_CantInsertARepetedUser() {
+    public async Task Test302_CantInsertARepetedUser() {
         AccessAndRefreshToken? tokens = await EnsureLogged();
         Assert.NotNull(tokens);
 

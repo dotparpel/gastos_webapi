@@ -9,17 +9,17 @@ namespace tests.Api;
 [TestCaseOrderer(
     ordererTypeName: "tests.Xunit.AlphabeticalOrderer",
     ordererAssemblyName: "tests")]
-public abstract class GenericSearchTest<TFixture, TEntity> : IClassFixture<TFixture> 
-    where TEntity : class
+public abstract class GenericSearchTest<TFixture, TEntity> : IClassFixture<TFixture>
     where TFixture : ApiFactory<Program>
+    where TEntity : class
 {
     protected readonly TFixture _factory;
     protected readonly HttpClient _client;
-    private readonly ODataEntityResponse<AccessAndRefreshToken> _appResp;
+    protected readonly ODataEntityResponse<AccessAndRefreshToken> _appResp;
     protected readonly AppClient _appClient;
-    private readonly ODataEntityResponse<TEntity> _entResp;
+    protected readonly ODataEntityResponse<TEntity> _entResp;
     protected readonly GenericSearchClient<TEntity> _entSearchClient;
-    protected readonly IGenericSearch<TEntity>? _search;
+    protected IGenericSearch<TEntity>? _search;
 
     protected string userLogin = "admin";
     protected string userPwd = "pwd";
@@ -31,7 +31,7 @@ public abstract class GenericSearchTest<TFixture, TEntity> : IClassFixture<TFixt
         _appClient = new AppClient(_client, _appResp);
         _entResp = new ODataEntityResponse<TEntity>();
         _entSearchClient = new GenericSearchClient<TEntity>(_client, _entResp);
-        _search = (IGenericSearch<TEntity>?) _factory.GetSearch<TEntity>();
+        _search = _factory.GetSearch<TEntity>();
     }
 
     protected async Task<AccessAndRefreshToken?> EnsureLogged() {
@@ -46,7 +46,7 @@ public abstract class GenericSearchTest<TFixture, TEntity> : IClassFixture<TFixt
     // Obtain the data to do the tests.
     protected abstract void FillData();
 
-    protected void EnsureCreatedData() {
+    protected virtual void EnsureCreatedData() {
         Assert.NotNull(_search);
 
         List<TEntity>? data = _search?.Read()?.ToList();
@@ -93,11 +93,11 @@ public abstract class GenericSearchTest<TFixture, TEntity> : IClassFixture<TFixt
         Assert.NotEmpty(data);
         Assert.Equal(list.Count, data.Count);
 
-        // Test the data returned (assuming the same order in both lists). 
+        // Test the data returned (assuming the same order in both lists).
         int pos = 0;
         foreach (TEntity t in list) {
             TEntity? u = data?[pos++];
-            
+
             Assert.NotNull(u);
             Assert.True(entityEq(t, u));
         }

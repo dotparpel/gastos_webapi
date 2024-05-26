@@ -3,30 +3,20 @@ using tests.Extensions;
 
 namespace tests.Client;
 
-public class GenericCRUDClient<Entity, TKey> : GenericSearchClient<Entity> {
-    private const string DEFAULT_VERSION = "v1";
-    protected new readonly ODataEntityKeyResponse<Entity, TKey> _oDataResp;
+public class GenericCRUDClient<TEntity, TKey> : GenericListClient<TEntity, TKey> 
+    where TEntity: class?
+{
+    protected new readonly ODataEntityKeyResponse<TEntity, TKey> _oDataResp;
 
     public GenericCRUDClient(
-        HttpClient client, ODataEntityKeyResponse<Entity, TKey> oDataResp, string? version = DEFAULT_VERSION
+        HttpClient client, ODataEntityKeyResponse<TEntity, TKey> oDataResp, string? version = DEFAULT_VERSION
     ) : base(client, oDataResp, version) { 
         _oDataResp = oDataResp;
     }
 
-    public async Task<Entity?> Get(TKey id) {
-        Entity? ret = default;
-
-        HttpResponseMessage resp = await _client.GetAsync($"/{_version}/{Typename()}/{id}");
-        StatusCode = resp.StatusCode;
-
-        if (resp.StatusCode == HttpStatusCode.OK)
-            ret = _oDataResp.GetOdataEntity(resp);
-
-        return ret;
-    }
-
-    public async Task<TKey?> Insert(Entity ent) {
-        TKey? ret = default;
+    public async Task<TKey?> Insert(TEntity ent) {
+        // It is not allowed to declare the variable "ret" as "TKey?" without declaring the type as "class" or "struct".
+        dynamic? ret = null;
 
         HttpResponseMessage resp = await _client.PostAsync($"/{_version}/{Typename()}?returnEntity=false", ent.ToStringContent());
         StatusCode = resp.StatusCode;
@@ -37,8 +27,8 @@ public class GenericCRUDClient<Entity, TKey> : GenericSearchClient<Entity> {
         return ret;
     }
 
-    public async Task<Entity?> InsertReturnsEntity(Entity ent) {
-        Entity? ret = default;
+    public async Task<TEntity?> InsertReturnsEntity(TEntity ent) {
+        TEntity? ret = null;
 
         HttpResponseMessage resp = await _client.PostAsync($"/{_version}/{Typename()}?returnEntity=true", ent.ToStringContent());
         StatusCode = resp.StatusCode;
@@ -49,15 +39,15 @@ public class GenericCRUDClient<Entity, TKey> : GenericSearchClient<Entity> {
         return ret;
     }
 
-    public async Task<bool> Update(TKey id, Entity ent) {
+    public async Task<bool> Update(TKey id, TEntity ent) {
         HttpResponseMessage resp = await _client.PatchAsync($"/{_version}/{Typename()}/{id}?returnEntity=false", ent.ToStringContent());
         StatusCode = resp.StatusCode;
 
         return resp.StatusCode == HttpStatusCode.NoContent;
     }
 
-    public async Task<Entity?> UpdateEntity(TKey id, Entity ent) {
-        Entity? ret = default;
+    public async Task<TEntity?> UpdateEntity(TKey id, TEntity ent) {
+        TEntity? ret = null;
 
         HttpResponseMessage resp = await _client.PatchAsync($"/{_version}/{Typename()}/{id}?returnEntity=true", ent.ToStringContent());
         StatusCode = resp.StatusCode;

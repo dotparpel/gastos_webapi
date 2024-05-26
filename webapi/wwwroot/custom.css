@@ -57,3 +57,42 @@
     margin-block-start: 0px !important;
     margin-block-end: 2px !important;
 }
+
+.close-dialog-button {
+    background-color: rgb(107, 98, 5);
+    border: none;
+    color: white;
+    padding: 4px 4px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+}
+
+.close-dialog-span {
+    border-radius: 3px;
+    color: #fff;
+    font-family: sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    min-width: 80px;
+    text-align: center;
+    text-shadow: 0 1px 0 rgba(0,0,0,.1);
+}
+
+.code-dialog {
+    /* position: relative; */
+    background: rgb(51, 51, 51);
+    padding: 4px;
+    height: 100%;
+    width: 100%;
+}
+
+.dialog-body {
+    position: absolute;
+    top: 32px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: auto;
+}

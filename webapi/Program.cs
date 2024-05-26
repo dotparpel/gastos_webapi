@@ -65,11 +65,13 @@ builder.Services.AddScoped<DbContext, ApiContext>();
 
 // Search & repositories.
 builder.Services.AddScoped(typeof(IGenericSearch<>), typeof(GenericSearch<>));
+builder.Services.AddScoped(typeof(IGenericList<,>), typeof(GenericList<,>));
 builder.Services.AddScoped(typeof(IGenericRepository<,>), typeof(GenericRepository<,>));
 
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IExpenseRepository, ExpenseRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IExpenseReportSearch, ExpenseReportSearch>();
 
 IMvcBuilder controllers = builder.Services
   // Controller's method exclusion.
@@ -171,11 +173,31 @@ if (appSettings.UseAuthorization) {
     );
 }
 
+// CORS (1).
+string corsPolicyName = "corsPolicy";
+
+if (appSettings.AllowCORS ?? false) {
+  builder.Services.AddCors(opt => {
+    opt.AddPolicy(
+      name: corsPolicyName
+      , policy => { 
+        policy.AllowAnyOrigin();
+        policy.AllowAnyHeader();
+        policy.AllowAnyMethod();
+      });
+  });
+}
+
 var app = builder.Build();
 
 // HTTPS connections.
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
+// CORS (2).
+// "The call to 'UseCors' must be placed after 'UseRouting', but before 'UseAuthorization'".
+if (appSettings.AllowCORS ?? false)
+  app.UseCors(corsPolicyName);
 
 if (appSettings.UseAuthorization) {
   app.UseAuthentication();

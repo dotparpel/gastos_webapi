@@ -85,7 +85,7 @@ public class CategoryTest : GenericCRUDTest<ApiFactory01<Program>, Category, int
             && ent1.cat_order == ent2.cat_order;
 
     [Fact]
-    public async Task Test200_CategoryInsertCantBeEmpty() {
+    public async Task Test301_CategoryInsertCantBeEmpty() {
         AccessAndRefreshToken? tokens = await EnsureLogged();
         Assert.NotNull(tokens);
 
@@ -102,7 +102,7 @@ public class CategoryTest : GenericCRUDTest<ApiFactory01<Program>, Category, int
     }
 
     [Fact]
-    public async Task Test201_CategoryInsertCantBeRepeated() {
+    public async Task Test302_CategoryInsertCantBeRepeated() {
         AccessAndRefreshToken? tokens = await EnsureLogged();
         Assert.NotNull(tokens);
 

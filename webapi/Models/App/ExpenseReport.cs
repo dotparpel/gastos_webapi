@@ -1,10 +1,10 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
 
 namespace webapi.Models;
 
-[Table("v_expense_report")]
-public class ExpenseReport
+public class ExpenseReport: EntityNullableId<int?>
 {
   [Key]
   public int? expense_id { get; set; }
@@ -15,8 +15,13 @@ public class ExpenseReport
 
   public int? cat_id { get; set; }
   public string? cat_desc { get; set; }
+  public DateTime? expense_date_tz { get; set; }
   public int? year { get; set; }
   public int? month { get; set; }
   public int? week { get; set; }
   public int? day { get; set; }
+
+  [IgnoreDataMember]
+  [JsonIgnore]
+  public override int? Id => expense_id;
 }

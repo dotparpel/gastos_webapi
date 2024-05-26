@@ -4,26 +4,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace webapi.Repository;
 
-public class GenericRepository<TTable, TKey> : GenericSearch<TTable>, IGenericRepository<TTable, TKey>
+public class GenericRepository<TTable, TKey> : GenericList<TTable, TKey>, IGenericRepository<TTable, TKey>
   where TTable : Entity<TKey>, new()
 {
 
   public GenericRepository(DbContext context) : base(context) { }
-
-  public string? LastError { get; protected set; }
-
-  public virtual async Task<TTable?> Get(TKey id, bool asNoTracking = true)
-  {
-    TTable? ret = null;
-    LastError = null;
-
-    ret = await _dbset.FindAsync(id);
-
-    if (asNoTracking && ret != null)
-      _ctx.Entry(ret).State = EntityState.Detached;
-
-    return ret;
-  }
 
   public virtual bool ValidateOnUpsert(TTable item) => true;
 

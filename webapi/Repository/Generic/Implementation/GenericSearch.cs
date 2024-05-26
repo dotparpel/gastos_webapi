@@ -8,14 +8,13 @@ public class GenericSearch<TView> : IGenericSearch<TView>
 {
   protected readonly DbContext _ctx;
   protected readonly DbSet<TView> _dbset;
+  public string? LastError { get; protected set; }
 
   public GenericSearch(DbContext context)
   {
     _ctx = context;
     _dbset = _ctx.Set<TView>();
   }
-
-  public DbContext Context => _ctx;
 
   public virtual IQueryable<TView>? Read(Expression<Func<TView, bool>>? predicate = null, bool? asNoTracking = true)
   {

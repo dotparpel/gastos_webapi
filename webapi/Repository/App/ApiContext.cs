@@ -7,13 +7,17 @@ using webapi.Application;
 using webapi.Models;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using System.Reflection;
 
 namespace webapi.Repository;
 
 public class ApiContext : DbContext
 {
+    // Just for testing.
+  static public readonly List<ExpenseReport> ExpenseReport = new();
+
   private readonly IAppSettings _appSettings;
-  private IEncryptionProvider? _encProvider;
+  private readonly IEncryptionProvider? _encProvider;
 
   Dictionary<string, string> _entityTable = new (StringComparer.OrdinalIgnoreCase) {
     { "category", "d_category" }
@@ -35,17 +39,22 @@ public class ApiContext : DbContext
     if (_encProvider != null)
       modelBuilder.UseEncryption(_encProvider);
 
+    // Define the Function "fn_expense_report".
+    MethodInfo? method = this.GetType().GetMethod(nameof(fn_expense_report), new[] { typeof(string) });
+    if (method != null)
+      modelBuilder.HasDbFunction(method);
+
     base.OnModelCreating(modelBuilder);
   }
 
-    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
-    {
-        // From: https://github.com/npgsql/npgsql/issues/4176
-        if (this.Database.IsNpgsql())
-            configurationBuilder
-                .Properties<DateTimeOffset>()
-                .HaveConversion<DateTimeOffsetConverter>();
-    }
+  protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+  {
+      // From: https://github.com/npgsql/npgsql/issues/4176
+      if (this.Database.IsNpgsql())
+          configurationBuilder
+              .Properties<DateTimeOffset>()
+              .HaveConversion<DateTimeOffsetConverter>();
+  }
 
   private void DeleteEntity<TEntity>(DbSet<TEntity> dbset) where TEntity: class {
     if (this.Database.IsRelational())
@@ -70,7 +79,7 @@ public class ApiContext : DbContext
 
     // SQL-Server.
     if (this.Database.IsSqlServer())
-      this.Database.ExecuteSqlRaw($"DBCC CHECKIDENT ('{_entityTable[entity]}', RESEED, 1);");
+      this.Database.ExecuteSql($"DBCC CHECKIDENT ('{_entityTable[entity]}', RESEED, 1);");
   }
 
   private void SetSequenceMax(string table) {
@@ -113,7 +122,7 @@ public class ApiContext : DbContext
         
       foreach (string entity in entityList) {
         if (this.Database.IsSqlServer())
-          this.Database.ExecuteSqlRaw($"SET IDENTITY_INSERT {_entityTable[entity]} ON");
+          this.Database.ExecuteSql($"SET IDENTITY_INSERT {_entityTable[entity]} ON");
 
         if (entity.ToLower() == "category")
           this.Category?.AddRange(ctx.Set<Category>());
@@ -124,7 +133,7 @@ public class ApiContext : DbContext
         this.SaveChanges();
 
         if (this.Database.IsSqlServer())
-          this.Database.ExecuteSqlRaw($"SET IDENTITY_INSERT {_entityTable[entity]} OFF");
+          this.Database.ExecuteSql($"SET IDENTITY_INSERT {_entityTable[entity]} OFF");
       }
       
       if (transaction != null)
@@ -139,10 +148,15 @@ public class ApiContext : DbContext
     ResetEntitiesCounter(entityList);
   }
 
+  public IQueryable<ExpenseReport> fn_expense_report(string? timezone)
+    // Make the function not crash when using "InMemory" database.
+    => Database.IsInMemory() 
+      ? ExpenseReport.AsQueryable()
+      :  FromExpression(() => fn_expense_report(timezone));
+
   public DbSet<Category>? Category {get; set; }
   public DbSet<Expense>? Expense {get; set; }
   public DbSet<ExpenseExpanded>? ExpenseExpanded {get; set; }
-  public DbSet<ExpenseReport>? ExpenseReport {get; set; }
   public DbSet<User>? User {get; set; }
 }
 

@@ -71,34 +71,57 @@ FROM t_expense AS expense
 		ON expense.cat_id = cat.cat_id
 ;
 
--- Expense report view.
-CREATE OR REPLACE VIEW v_expense_report AS
-SELECT expense_id 
-    , expense_date
-    , expense_desc
-    , expense_amount
+-- Expense report function.
+CREATE OR REPLACE FUNCTION fn_expense_report (
+	tz VARCHAR(128) DEFAULT NULL
+) 
+RETURNS TABLE (
+	expense_id				INT4
+	, expense_date			TIMESTAMPTZ
+	, expense_desc			VARCHAR(128)
+	, expense_amount		NUMERIC(12, 2)
+	, cat_id				INT4
+	, cat_desc				VARCHAR(64)
+	, expense_date_tz		TIMESTAMP WITHOUT TIME zone
+	, year				    INT4
+	, month				    INT4
+	, week 				    INT4
+	, day				    INT4
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+	tz := COALESCE(tz, CURRENT_SETTING('TIMEZONE')) ;
+	
+	RETURN QUERY 
+	SELECT 
+    expense.expense_id
+    , expense.expense_date
+    , expense.expense_desc
+    , expense.expense_amount
     , expense.cat_id
     , cat.cat_desc
-	, CAST(DATE_PART('year',  expense_date) AS INTEGER) AS year
-	, CAST(DATE_PART('month', expense_date) AS INTEGER) AS month
-	, CAST(DATE_PART('week',  expense_date) AS INTEGER) AS week
-	, CAST(DATE_PART('day',   expense_date) AS INTEGER) AS day
-FROM t_expense AS expense
-	LEFT JOIN d_category AS cat
-		ON expense.cat_id = cat.cat_id
-;
+    , expense.expense_date AT TIME ZONE tz as expense_date_tz
+		, CAST(DATE_PART('year',  expense.expense_date AT TIME ZONE tz) AS INTEGER) AS year
+		, CAST(DATE_PART('month', expense.expense_date AT TIME ZONE tz) AS INTEGER) AS month
+		, CAST(DATE_PART('week',  expense.expense_date AT TIME ZONE tz) AS INTEGER) AS week
+		, CAST(DATE_PART('day',   expense.expense_date AT TIME ZONE tz) AS INTEGER) AS day
+	FROM t_expense expense
+		LEFT JOIN d_category cat 
+			ON expense.cat_id = cat.cat_id;
+END; $$
 
 -- User table.
 CREATE TABLE IF NOT EXISTS d_user (
-	user_id 					                  SERIAL PRIMARY KEY NOT NULL
-	, user_login 				                VARCHAR(128) NOT NULL
-	, user_pwd 					                TEXT NOT NULL
-	, user_access_key			              UUID NULL
-  , user_access_token_expire_minutes  NUMERIC(12, 2) NULL
-	, user_refresh_key			            VARCHAR(128) NULL
-  , user_refresh_token_expire_minutes NUMERIC(12, 2) NULL
+	user_id 					        SERIAL PRIMARY KEY NOT NULL
+	, user_login 				        VARCHAR(128) NOT NULL
+	, user_pwd 					        TEXT NOT NULL
+	, user_access_key			        UUID NULL
+	, user_access_token_expire_minutes  NUMERIC(12, 2) NULL
+	, user_refresh_key			        VARCHAR(128) NULL
+	, user_refresh_token_expire_minutes NUMERIC(12, 2) NULL
 	, user_refresh_expire_date	        TIMESTAMPTZ NULL
-	, user_login_expire_date	          TIMESTAMPTZ NULL
+	, user_login_expire_date	        TIMESTAMPTZ NULL
 );
 
 CREATE INDEX IF NOT EXISTS i_user_login_pwd

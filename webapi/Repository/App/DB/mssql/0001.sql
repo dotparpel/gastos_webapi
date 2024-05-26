@@ -144,25 +144,30 @@ FROM t_expense AS expense
 	LEFT JOIN d_category AS cat
 		ON expense.cat_id = cat.cat_id
 GO
-/****** Object:  View [dbo].[v_expense_report]    Script Date: 14/10/2023 14:24:26 ******/
+/****** Object:  Function [dbo].[fn_expense_report]    Script Date: 22/12/2023 16:26:26 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-CREATE VIEW [dbo].[v_expense_report] AS
-SELECT expense_id 
+CREATE FUNCTION [dbo].[fn_expense_report](@timezone varchar(128) = null)
+RETURNS TABLE
+AS RETURN (
+  SELECT 
+    expense_id 
     , expense_date
     , expense_desc
     , expense_amount
     , expense.cat_id
     , cat.cat_desc
-	, YEAR(expense_date) AS year
-	, MONTH(expense_date) AS month
-	, DATEPART(week,  expense_date) AS week
-	, DAY(expense_date) AS day
-FROM t_expense AS expense
-	LEFT JOIN d_category AS cat
-		ON expense.cat_id = cat.cat_id
+    , CAST(expense_date AT TIME ZONE COALESCE(@timezone, CURRENT_TIMEZONE_ID()) AS DATETIME) AS expense_date_tz
+    , YEAR(expense_date AT TIME ZONE COALESCE(@timezone, CURRENT_TIMEZONE_ID())) AS year
+    , MONTH(expense_date AT TIME ZONE COALESCE(@timezone, CURRENT_TIMEZONE_ID())) AS month
+    , DATEPART(week,  expense_date AT TIME ZONE COALESCE(@timezone, CURRENT_TIMEZONE_ID())) AS week
+    , DAY(expense_date AT TIME ZONE COALESCE(@timezone, CURRENT_TIMEZONE_ID())) AS day
+  FROM t_expense AS expense
+    LEFT JOIN d_category AS cat
+      ON expense.cat_id = cat.cat_id
+)
 GO
 /****** Object:  Table [dbo].[c_config]    Script Date: 14/10/2023 14:24:26 ******/
 SET ANSI_NULLS ON

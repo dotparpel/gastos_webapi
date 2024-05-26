@@ -11,6 +11,7 @@ public class AppSettings : IAppSettings{
   public string? ApiVersion { get; set; }
   public JwtSettings? Jwt { get; set; }
   public bool? UseSwaggerUI { get; set; }
+  public bool? AllowCORS { get; set; }
   public List<string>? ExcludeControllerMethods {get; set;}
   public List<string>? ExportEntities {get; set;}
 

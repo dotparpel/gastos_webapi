@@ -44,22 +44,26 @@ function getAuthorized(url) {
                 console.log('200: ' + data);
 
                 var ret = data;
-                var newwindow = window.open('', '_blank');
-                if (newwindow && newwindow != null) {
-                    var html = 
-                    '<html>'
-                    + '<head><meta name="color-scheme" content="light dark">'
-                    + '</head>'
-                    + '<body><pre style="word-wrap: break-word; white-space: pre-wrap;">'
-                    + '[retValue]'
-                    + '</pre>'
-                    + '</body>'
-                    + '</html>';
-                    html = html.replace('[retValue]', JSON.stringify(ret, null, 2));
+                var json = JSON.stringify(ret, null, 2);
+                // var newwindow = window.open('', '_blank');
+                // if (newwindow && newwindow != null) {
+                //     var html = 
+                //     '<html>'
+                //     + '<head><meta name="color-scheme" content="light dark">'
+                //     + '</head>'
+                //     + '<body><pre style="word-wrap: break-word; white-space: pre-wrap;">'
+                //     + '[retValue]'
+                //     + '</pre>'
+                //     + '</body>'
+                //     + '</html>';
+                //     html = html.replace('[retValue]', json);
                     
-                    newwindow.document.body.innerHTML = html;
-                } else
-                    alert ("Can't open a new window.");
+                //     newwindow.document.body.innerHTML = html;
+                // } else {
+                    // alert ("Can't open a new window.");
+                    $("#wndResultBody").html(json);
+                    $("#wndResult")[0].showModal();
+                // }
             }
             , 400: alertXhr
             , 401: alertXhr
@@ -128,6 +132,29 @@ $(document).ready(function() {
                     }
                 }, 100);
             });
+
+            // Create a dialog to show the results.
+            var dialog = $('<dialog id="wndResult" class="code-dialog">'
+                + '<div>'
+                + '<button class="close-dialog-button" autofocus>'
+                + '<span class="close-dialog-span">Close</span>'
+                + '</button>'
+                + '</div>'
+                + '<div class="dialog-body">'
+                + '<pre class="microlight" style="display: block; overflow-x: auto; padding: 0.5em; background: rgb(51, 51, 51); color: white;">'
+                + '<code id="wndResultBody" class="language-json" style="white-space: pre;">'
+                + '</code>'
+                + '</pre>'
+                + '</div>'
+                + '</dialog>');
+            dialog.appendTo('body');
+
+            // Close the dialog when button clicked.
+            $("button.close-dialog-button").on("click", function() { 
+                $(this).closest("dialog")[0].close(); 
+            });
+
+            // Open the dialog with "$("#wndResult")[0].showModal()".
         }
     }, 100); // check every 100ms
 });

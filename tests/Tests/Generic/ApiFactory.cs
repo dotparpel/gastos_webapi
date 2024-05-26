@@ -32,7 +32,7 @@ public abstract class ApiFactory<TProgram> : WebApplicationFactory<TProgram>
     }
 
     public IGenericSearch<TEntity>? GetSearch<TEntity>(Type? repositoryType = null) 
-        where TEntity : class 
+        where TEntity : class
     {
         IGenericSearch<TEntity>? ret = null;
 
@@ -42,6 +42,22 @@ public abstract class ApiFactory<TProgram> : WebApplicationFactory<TProgram>
                 ret = new GenericSearch<TEntity>(ctx);
         } else {
             ret = (IGenericSearch<TEntity>?) GetService(repositoryType);
+        }
+
+        return ret;
+    }
+
+    public IGenericList<TEntity, TKey>? GetList<TEntity, TKey>(Type? repositoryType = null) 
+        where TEntity : class
+    {
+        IGenericList<TEntity, TKey>? ret = null;
+
+        if (repositoryType == null) {
+            DbContext? ctx = (DbContext?) GetService(typeof(DbContext));
+            if (ctx != null)
+                ret = new GenericList<TEntity, TKey>(ctx);
+        } else {
+            ret = (IGenericList<TEntity, TKey>?) GetService(repositoryType);
         }
 
         return ret;

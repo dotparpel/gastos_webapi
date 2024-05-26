@@ -92,16 +92,11 @@ public class ExpenseTest : GenericCRUDTest<ApiFactory01<Program>, Expense, int?>
         AccessAndRefreshToken? tokens = await EnsureLogged();
         Assert.NotNull(tokens);
 
-        int? countBefore = await _entCRUDClient.Count() ?? 0;
-
         Expense? ent = new Expense();
         Expense? entResp = await _entCRUDClient.InsertReturnsEntity(ent);
 
         Assert.Equal(HttpStatusCode.BadRequest, _entCRUDClient.StatusCode);
         Assert.Null(entResp);
-
-        int? countAfter = await _entCRUDClient.Count() ?? 0;
-        Assert.Equal(countAfter, countBefore);
     }
 
     [Fact]

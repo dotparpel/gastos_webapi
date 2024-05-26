@@ -10,7 +10,7 @@ namespace webapi.Controllers;
 public abstract class GenericSearchController<TTable> : ODataController
   where TTable : class
 {
-  private readonly IGenericSearch<TTable> _rep;
+  protected readonly IGenericSearch<TTable> _rep;
   private readonly ILogger<GenericSearchController<TTable>> _logger;
 
   public GenericSearchController(ILogger<GenericSearchController<TTable>> logger, IGenericSearch<TTable> rep)
@@ -23,7 +23,7 @@ public abstract class GenericSearchController<TTable> : ODataController
   /// Get a list of the existent {items}.
   /// </summary>
   /// <returns>List of items</returns>
-  /// <response code="200">{Item} found and returned</response>
+  /// <response code="200">{Items} found and returned</response>
   /// <response code="400">Invalid OData parameters</response>
   /// <response code="401">Unauthorized</response>
   /// <response code="500">Internal server error</response>
@@ -35,5 +35,4 @@ public abstract class GenericSearchController<TTable> : ODataController
   [Produces("application/json")]
   [Authorize]
   public virtual IQueryable<TTable>? Get() => _rep.Read();
-
 }

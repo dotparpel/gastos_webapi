@@ -6,6 +6,7 @@ using System.Text;
 using Microsoft.IdentityModel.Tokens;
 
 using webapi.Application;
+using webapi.Extensions;
 
 namespace webapi.JWT;
 
@@ -78,31 +79,36 @@ public class JWT : IJWT {
     string? ret = null;
     JwtSecurityToken? token;
 
-    // Unique identifier per JWT token.
-    List<Claim> claims = new()
-    {
-        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-        // We want to identify the user given a token.
-        new Claim(ClaimTypes.Sid, accessKey.ToString())
-    };
+    try {
+      // Unique identifier per JWT token.
+      List<Claim> claims = new()
+      {
+          new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+          // We want to identify the user given a token.
+          new Claim(ClaimTypes.Sid, accessKey.ToString())
+      };
 
-    SymmetricSecurityKey securityKey = new (Encoding.UTF8.GetBytes(key));
-    SigningCredentials credentials = new (securityKey, SecurityAlgorithms.HmacSha256);
+      SymmetricSecurityKey securityKey = new (Encoding.UTF8.GetBytes(key).ExtendIfNeeded(32));
+      SigningCredentials credentials = new (securityKey, SecurityAlgorithms.HmacSha256);
 
-    token = new JwtSecurityToken(
-      _appSettings.Jwt?.Issuer
-      , _appSettings.Jwt?.Audience
-      , claims: claims
-      , expires: DateTime.Now.AddMinutes((double) minutes)
-      , signingCredentials: credentials
-    );
-    
-    if (token != null)
-      ret = new JwtSecurityTokenHandler().WriteToken(token);
+      token = new JwtSecurityToken(
+        _appSettings.Jwt?.Issuer
+        , _appSettings.Jwt?.Audience
+        , claims: claims
+        , expires: DateTime.Now.AddMinutes((double) minutes)
+        , signingCredentials: credentials
+      );
+      
+      if (token != null)
+        ret = new JwtSecurityTokenHandler().WriteToken(token);
+    }
+    catch (Exception ex) {
+      throw new Exception($"[{Reflection.MethodName()}] {ex.Message}", ex);
+    }
 
     return ret;
   }
-  
+
   public ClaimsPrincipal? GetPrincipalFromToken(string? token) {
     string? key = _appSettings.Jwt?.Key;
 
@@ -113,7 +119,7 @@ public class JWT : IJWT {
     ClaimsPrincipal? ret = null;
 
     if (!string.IsNullOrEmpty(key) && !string.IsNullOrEmpty(token)) {
-      SymmetricSecurityKey securityKey = new (Encoding.UTF8.GetBytes(key));
+      SymmetricSecurityKey securityKey = new (Encoding.UTF8.GetBytes(key).ExtendIfNeeded(32));
 
       TokenValidationParameters validationParameters  = new()
       {

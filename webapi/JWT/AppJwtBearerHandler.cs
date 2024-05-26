@@ -16,9 +16,9 @@ public class AppJwtBearerHandler : JwtBearerHandler {
   private readonly IUserRepository _rep;
 
   public AppJwtBearerHandler(
-    IOptionsMonitor<JwtBearerOptions> options, ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock
+    IOptionsMonitor<JwtBearerOptions> options, ILoggerFactory logger, UrlEncoder encoder
     , IJWT jwt, IUserRepository rep
-  ) : base(options, logger, encoder, clock) { 
+  ) : base(options, logger, encoder) { 
     _jwt = jwt;
     _rep = rep;
   }

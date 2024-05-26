@@ -6,22 +6,22 @@ using webapi.JWT;
 
 namespace tests.Api;
 
-public abstract class GenericCRUDTest<TFixture, TEntity, TKey> : GenericSearchTest<TFixture, TEntity>
-    where TEntity : Entity<TKey>, new()
+public abstract class GenericCRUDTest<TFixture, TEntity, TKey> : GenericListTest<TFixture, TEntity, TKey>
+    where TEntity : EntityNullableId<TKey>
     where TFixture : ApiFactory<Program>
 {
-    private readonly ODataEntityKeyResponse<TEntity, TKey> _entResp;
+    protected readonly ODataEntityKeyResponse<TEntity, TKey> _entKeyResp;
     protected readonly GenericCRUDClient<TEntity, TKey> _entCRUDClient;
     
     public GenericCRUDTest(TFixture factory) : base(factory) {
-        _entResp = new ODataEntityKeyResponse<TEntity, TKey>();
-        _entCRUDClient = new GenericCRUDClient<TEntity, TKey>(_client, _entResp);
+        _entKeyResp = new ODataEntityKeyResponse<TEntity, TKey>();
+        _entCRUDClient = new GenericCRUDClient<TEntity, TKey>(_client, _entKeyResp);
     }
 
     protected abstract IEnumerable<TEntity>? UseCaseInsertOkSet1();
 
     [Fact]
-    public async Task Test101_InsertReturnsEntityOk() {
+    public async Task Test201_InsertReturnsEntityOk() {
         AccessAndRefreshToken? tokens = await EnsureLogged();
         Assert.NotNull(tokens);
 
@@ -36,7 +36,7 @@ public abstract class GenericCRUDTest<TFixture, TEntity, TKey> : GenericSearchTe
     }
 
     private async Task InsertReturnsEntityOk(TEntity ent) {
-        List<TEntity>? listBefore = await _entSearchClient.Read();
+        List<TEntity>? listBefore = await _entListClient.Read();
 
         TEntity? inserted = await _entCRUDClient.InsertReturnsEntity(ent);
 
@@ -44,7 +44,7 @@ public abstract class GenericCRUDTest<TFixture, TEntity, TKey> : GenericSearchTe
         Assert.NotNull(inserted);
         Assert.NotNull(inserted.Id);
 
-        List<TEntity>? listAfter = await _entSearchClient.Read();
+        List<TEntity>? listAfter = await _entListClient.Read();
 
         Assert.NotNull(listAfter);
         Assert.NotEmpty(listAfter);
@@ -56,7 +56,7 @@ public abstract class GenericCRUDTest<TFixture, TEntity, TKey> : GenericSearchTe
     protected abstract IEnumerable<TEntity>? UseCaseInsertOkSet2();
 
     [Fact]
-    public async Task Test102_InsertOk() {
+    public async Task Test202_InsertOk() {
         AccessAndRefreshToken? tokens = await EnsureLogged();
         Assert.NotNull(tokens);
 
@@ -66,14 +66,14 @@ public abstract class GenericCRUDTest<TFixture, TEntity, TKey> : GenericSearchTe
         Assert.NotEmpty(list);
 
         foreach (TEntity ent in list) {
-            List<TEntity>? listBefore = await _entSearchClient.Read();
+            List<TEntity>? listBefore = await _entListClient.Read();
 
             TKey? id = await _entCRUDClient.Insert(ent);
 
             Assert.Equal(HttpStatusCode.Created, _entCRUDClient.StatusCode);
             Assert.NotNull(id);
 
-            List<TEntity>? listAfter = await _entSearchClient.Read();
+            List<TEntity>? listAfter = await _entListClient.Read();
 
             Assert.NotNull(listAfter);
             Assert.NotEmpty(listAfter);
@@ -86,7 +86,7 @@ public abstract class GenericCRUDTest<TFixture, TEntity, TKey> : GenericSearchTe
     protected abstract TEntity? entityNew(params object[] param);
 
     [Fact]
-    public async Task Test103_InsertEmptyKo() {
+    public async Task Test203_InsertEmptyKo() {
         AccessAndRefreshToken? tokens = await EnsureLogged();
         Assert.NotNull(tokens);
 
@@ -103,7 +103,7 @@ public abstract class GenericCRUDTest<TFixture, TEntity, TKey> : GenericSearchTe
     protected abstract IEnumerable<TEntity>? UseCaseGetOkSet();
 
     [Fact]
-    public async Task Test104_GetOk() {
+    public async Task Test204_GetOk() {
         AccessAndRefreshToken? tokens = await EnsureLogged();
         Assert.NotNull(tokens);
 
@@ -129,7 +129,7 @@ public abstract class GenericCRUDTest<TFixture, TEntity, TKey> : GenericSearchTe
     protected abstract IEnumerable<TKey>? UseCaseInvalidKeys();
 
     [Fact]
-    public async Task Test105_GetInvalidKeysKo() {
+    public async Task Test205_GetInvalidKeysKo() {
         AccessAndRefreshToken? tokens = await EnsureLogged();
         Assert.NotNull(tokens);
 
@@ -149,7 +149,7 @@ public abstract class GenericCRUDTest<TFixture, TEntity, TKey> : GenericSearchTe
     protected abstract void entityUpdate(TEntity ent, params object?[] param);
 
     [Fact]
-    public async Task Test106_UpdateReturnsEntityOk() {
+    public async Task Test206_UpdateReturnsEntityOk() {
         AccessAndRefreshToken? tokens = await EnsureLogged();
         Assert.NotNull(tokens);
 
@@ -162,7 +162,7 @@ public abstract class GenericCRUDTest<TFixture, TEntity, TKey> : GenericSearchTe
         Assert.NotNull(inserted.Id);
         Assert.True(entityEq(ent, inserted));
 
-        List<TEntity>? listBefore = await _entSearchClient.Read();
+        List<TEntity>? listBefore = await _entListClient.Read();
 
         entityUpdate(inserted, null, 106);
 
@@ -173,7 +173,7 @@ public abstract class GenericCRUDTest<TFixture, TEntity, TKey> : GenericSearchTe
     }
 
     [Fact]
-    public async Task Test107_UpdateOk() {
+    public async Task Test207_UpdateOk() {
         AccessAndRefreshToken? tokens = await EnsureLogged();
         Assert.NotNull(tokens);
 
@@ -200,7 +200,7 @@ public abstract class GenericCRUDTest<TFixture, TEntity, TKey> : GenericSearchTe
     }
 
     [Fact]
-    public async Task Test108_UpdateInvalidKeysKo() {
+    public async Task Test208_UpdateInvalidKeysKo() {
         AccessAndRefreshToken? tokens = await EnsureLogged();
         Assert.NotNull(tokens);
 
@@ -221,7 +221,7 @@ public abstract class GenericCRUDTest<TFixture, TEntity, TKey> : GenericSearchTe
     }
 
     [Fact]
-    public async Task Test109_DeleteOk() {
+    public async Task Test209_DeleteOk() {
         AccessAndRefreshToken? tokens = await EnsureLogged();
         Assert.NotNull(tokens);
 
@@ -233,7 +233,7 @@ public abstract class GenericCRUDTest<TFixture, TEntity, TKey> : GenericSearchTe
         Assert.NotNull(inserted);
         Assert.NotNull(inserted.Id);
 
-        List<TEntity>? listBefore = await _entSearchClient.Read();
+        List<TEntity>? listBefore = await _entListClient.Read();
 
         Assert.NotNull(listBefore);
         Assert.NotEmpty(listBefore);
@@ -243,14 +243,14 @@ public abstract class GenericCRUDTest<TFixture, TEntity, TKey> : GenericSearchTe
 
         Assert.True(deleted);
 
-        List<TEntity>? listAfter = await _entSearchClient.Read();
+        List<TEntity>? listAfter = await _entListClient.Read();
 
         Assert.NotNull(listAfter);
         Assert.True(listAfter == null || listAfter.Where(u => inserted.Id.Equals(u.Id)).Count() == 0);
     }
 
     [Fact]
-    public async Task Test110_DeleteInvalidKeysKo() {
+    public async Task Test210_DeleteInvalidKeysKo() {
         AccessAndRefreshToken? tokens = await EnsureLogged();
         Assert.NotNull(tokens);
 
